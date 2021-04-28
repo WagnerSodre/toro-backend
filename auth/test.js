@@ -1,51 +1,64 @@
-const assert = require('assert');
-const auth = require('./auth');
+const sinon = require('sinon');
+const { expect } = require('chai');
 const dotenv = require('dotenv');
+const jwt = require('jsonwebtoken');
+
+const auth = require('./auth');
+const User = require('../models/user');
 
 dotenv.config();
 
 describe('Login', function() {
   describe('When a invalid user tries to login', function() {
+    const sandbox = sinon.createSandbox();
     it('should return an error', function() {
+      sandbox.stub(User, 'findOne').rejects(new Error());
       let req = {
         'body': {
-          'user': 'leonardo',
-          'pwd': '12345'
+          'user': 'test',
+          'pwd': 'wrong'
         }
       };
       let res = {
         send: function(){ },
         json: function(err){
-            assert.equal(err.message, 'Unauthorized');
+          expect(err.message).to.equal('Unauthorized');
         },
         status: function(responseStatus) {
-            assert.equal(responseStatus, 401);
-            return this; 
+          expect(responseStatus).to.equal(401);
+          return this; 
         }
       };
       auth.login(req, res);
+      // Restore sandbox.
+      sandbox.restore();
     });
   });
 
   describe('When a valid user tries to login', function() {
+    const sandbox = sinon.createSandbox();
     it('should return a token', function() {
+      const mockUser = { _id: '5e684ebacb19f70020661f44', name: 'test', password: 'test' };
+      sandbox.stub(User, 'findOne').returns(Promise.resolve(mockUser));
       let req = {
         'body': {
-          'user': 'wagner',
-          'pwd': '12345'
+          'user': 'test',
+          'pwd': 'test'
         }
       };
       let res = {
         send: function(){ },
         json: function(res){
-            assert.equal(res.auth, true);
+          expect(res.auth).to.equal(true);
         },
         status: function(responseStatus) {
-            assert.equal(responseStatus, 200);
-            return this; 
+          expect(responseStatus).to.equal(200);
+          return this; 
         }
       };
       auth.login(req, res);
+      // Restore sandbox.
+      sandbox.restore();
     });
   });
 });
@@ -57,11 +70,11 @@ describe('Logout', function() {
       let res = {
         send: function(){ },
         json: function(res){
-            assert.equal(res.auth, true);
+          expect(res.auth).to.equal(true);
         },
         status: function(responseStatus) {
-            assert.equal(responseStatus, 200);
-            return this; 
+          expect(responseStatus).to.equal(200);
+          return this; 
         }
       };
       auth.logout(req, res);
@@ -78,11 +91,11 @@ describe('verifyJWT', function() {
       let res = {
         send: function(){ },
         json: function(err){
-            assert.equal(err.message, "No token provided");
+          expect(err.message).to.equal("No token provided");
         },
         status: function(responseStatus) {
-            assert.equal(responseStatus, 401);
-            return this; 
+          expect(responseStatus).to.equal(401);
+          return this; 
         }
       };
       let valid = false;
@@ -90,7 +103,7 @@ describe('verifyJWT', function() {
         valid = true;
       }
       auth.verifyJWT(req, res, next);
-      assert.equal(valid, false);
+      expect(valid).to.equal(false);
     });
   });
 
@@ -104,11 +117,11 @@ describe('verifyJWT', function() {
       let res = {
         send: function(){ },
         json: function(err){
-            assert.equal(err.message, "Failed to authenticate token");
+          expect(err.message).to.equal("Failed to authenticate token");
         },
         status: function(responseStatus) {
-            assert.equal(responseStatus, 500);
-            return this; 
+          expect(responseStatus).to.equal(500);
+          return this; 
         }
       };
       let valid = false;
@@ -116,29 +129,16 @@ describe('verifyJWT', function() {
         valid = true;
       }
       auth.verifyJWT(req, res, next);
-      assert.equal(valid, false);
+      expect(valid).to.equal(false);
     });
   });
   
   describe('When a user tries to login with a valid token', function() {
     it('should pass the validation', function() {
-      let token;
-      let req = {
-        'body': {
-          'user': 'wagner',
-          'pwd': '12345'
-        }
-      };
-      let res = {
-        send: function(){ },
-        json: function(res){
-          token = res.token;
-        },
-        status: function(responseStatus) {
-            return this; 
-        }
-      };
-      auth.login(req, res);
+      let id = 1;
+      const token = jwt.sign({ id }, process.env.SECRET, {
+        expiresIn: 300 // expires in 5min
+      });
       req = {
         'headers': {
           'x-access-token': token
@@ -155,7 +155,7 @@ describe('verifyJWT', function() {
         valid = true;
       }
       auth.verifyJWT(req, res, next);
-      assert.equal(valid, true);
+      expect(valid).to.equal(true);
     });
   });
 });
