@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-describe('Auth', function() {
+describe('Login', function() {
   describe('When a invalid user tries to login', function() {
     it('should return an error', function() {
       let req = {
@@ -46,6 +46,25 @@ describe('Auth', function() {
         }
       };
       auth.login(req, res);
+    });
+  });
+});
+
+describe('Logout', function() {
+  describe('When a user tries to logout', function() {
+    it('should clean the token', function() {
+      let req = {};
+      let res = {
+        send: function(){ },
+        json: function(res){
+            assert.equal(res.auth, true);
+        },
+        status: function(responseStatus) {
+            assert.equal(responseStatus, 200);
+            return this; 
+        }
+      };
+      auth.logout(req, res);
     });
   });
 });
