@@ -16,10 +16,10 @@ describe('Auth', function() {
       let res = {
         send: function(){ },
         json: function(err){
-            assert.equal(err.message, 'Invalid user!');
+            assert.equal(err.message, 'Unauthorized');
         },
         status: function(responseStatus) {
-            assert.equal(responseStatus, 500);
+            assert.equal(responseStatus, 401);
             return this; 
         }
       };
