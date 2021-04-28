@@ -15,10 +15,13 @@ app.get('/', (req, res, next) => {
 })
  
 app.post('/auth/login', (req, res, next) => { 
-    console.log(req);
     auth.login(req, res);
 }) 
  
+app.post('/auth/logout', function(req, res) {
+    auth.logout(req, res);
+})
+
 const server = http.createServer(app); 
 
 server.listen(process.env.PORT);
