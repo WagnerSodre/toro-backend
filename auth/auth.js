@@ -6,7 +6,7 @@ exports.login = function(req, res){
     if(req.body.user === 'wagner' && req.body.pwd === '12345'){
       //auth ok
       const id = 1; //id should come from db
-      var token = jwt.sign({ id }, process.env.SECRET, {
+      let token = jwt.sign({ id }, process.env.SECRET, {
         expiresIn: 300 // expires in 5min
       });
       return res.status(200).json({ auth: true, token: token });
@@ -18,3 +18,14 @@ exports.login = function(req, res){
 exports.logout = function(req, res){
     res.status(200).send({ auth: false, token: null }); 
 };
+
+exports.verifyJWT = function(req, res, next){ 
+    let token = req.headers['x-access-token'];
+    if (!token) return res.status(401).json({ auth: false, message: 'No token provided' });
+    
+    jwt.verify(token, process.env.SECRET, function(err, decoded) {
+      if (err) return res.status(500).json({ auth: false, message: 'Failed to authenticate token' });
+      
+      next();
+    });
+}    
