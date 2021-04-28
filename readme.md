@@ -1,5 +1,11 @@
 # TORO API
 
+## Create .env file
+
+    NODE_ENV=
+    PORT=
+    SECRET=
+
 ## Install
 
     npm install
