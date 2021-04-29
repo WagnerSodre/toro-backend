@@ -11,7 +11,7 @@ exports.login = function(req, res){
         //auth ok
         const id = user._id;
         let token = jwt.sign({ id }, process.env.SECRET, {
-          expiresIn: 300 // expires in 5min
+          expiresIn: 3600 // expires in 1 hour
         });
         res.status(200).json({ auth: true, token: token });
     })
